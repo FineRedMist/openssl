@@ -152,15 +152,13 @@ all:	exe
 
 exe:	$(EXE) dummytest$(EXE_EXT)
 
-files:
-	$(PERL) $(TOP)/util/files.pl Makefile >> $(TOP)/MINFO
-
 generate: $(SRC)
 $(SRC):
 	@sh $(TOP)/util/point.sh dummytest.c $@
 
 tests: exe apps
-	TOP=$(TOP) PERL=$(PERL) $(PERL) run_tests.pl $(TESTS)
+	OPENSSL_ENGINES=../engines TOP=$(TOP) PERL=$(PERL) \
+		$(PERL) run_tests.pl $(TESTS)
 
 errors:
 

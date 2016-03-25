@@ -63,9 +63,7 @@
 #include <internal/evp_int.h>
 #include <internal/conf.h>
 #include <internal/async.h>
-#ifndef OPENSSL_NO_ENGINE
 #include <internal/engine.h>
-#endif
 #include <openssl/comp.h>
 #include <internal/err.h>
 #include <stdlib.h>
@@ -492,7 +490,9 @@ void OPENSSL_cleanup(void)
     ENGINE_cleanup();
 #endif
     CRYPTO_cleanup_all_ex_data();
+#ifndef OPENSSL_NO_SOCK
     BIO_sock_cleanup();
+#endif
     EVP_cleanup();
     OBJ_cleanup();
     base_inited = 0;

@@ -144,7 +144,6 @@
 
 # include <openssl/e_os2.h>
 # include <openssl/opensslconf.h>
-
 # include <openssl/comp.h>
 # include <openssl/bio.h>
 # if OPENSSL_API_COMPAT < 0x10100000L
@@ -159,9 +158,7 @@
 
 # include <openssl/safestack.h>
 # include <openssl/symhacks.h>
-# ifndef OPENSSL_NO_CT
-#  include <openssl/ct.h>
-# endif
+# include <openssl/ct.h>
 
 #ifdef  __cplusplus
 extern "C" {
@@ -646,13 +643,8 @@ __owur int SRP_Calc_A_param(SSL *s);
 
 # endif
 
-# if defined(OPENSSL_SYS_MSDOS) && !defined(OPENSSL_SYS_WIN32)
-#  define SSL_MAX_CERT_LIST_DEFAULT 1024*30
-                                          /* 30k max cert list :-) */
-# else
-#  define SSL_MAX_CERT_LIST_DEFAULT 1024*100
-                                           /* 100k max cert list :-) */
-# endif
+/* 100k max cert list */
+# define SSL_MAX_CERT_LIST_DEFAULT 1024*100
 
 # define SSL_SESSION_CACHE_MAX_SIZE_DEFAULT      (1024*20)
 
@@ -1375,7 +1367,7 @@ DECLARE_PEM_rw(SSL_SESSION, SSL_SESSION)
         SSL_ctrl(s, SSL_CTRL_SET_MAX_PROTO_VERSION, version, NULL)
 
 
-__owur BIO_METHOD *BIO_f_ssl(void);
+__owur const BIO_METHOD *BIO_f_ssl(void);
 __owur BIO *BIO_new_ssl(SSL_CTX *ctx, int client);
 __owur BIO *BIO_new_ssl_connect(SSL_CTX *ctx);
 __owur BIO *BIO_new_buffer_ssl_connect(SSL_CTX *ctx);
@@ -1900,7 +1892,9 @@ void SSL_trace(int write_p, int version, int content_type,
 __owur const char *SSL_CIPHER_standard_name(const SSL_CIPHER *c);
 # endif
 
+# ifndef OPENSSL_NO_SOCK
 int DTLSv1_listen(SSL *s, BIO_ADDR *client);
+# endif
 
 # ifndef OPENSSL_NO_CT
 

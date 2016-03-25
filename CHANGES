@@ -4,6 +4,25 @@
 
  Changes between 1.0.2g and 1.1.0  [xx XXX xxxx]
 
+  *) Removed no-rijndael as a config option. Rijndael is an old name for AES.
+     [Matt Caswell}
+
+  *) Removed the mk1mf build scripts.
+     [Richard Levitte]
+
+  *) Headers are now wrapped, if necessary, with OPENSSL_NO_xxx, so
+     it is always safe to #include a header now.
+     [Rich Salz]
+
+  *) Removed the aged BC-32 config and all its supporting scripts
+     [Richard Levitte]
+
+  *) Removed support for Ultrix, Netware, and OS/2.
+     [Rich Salz]
+
+  *) Add support for HKDF.
+     [Alessandro Ghedini]
+
   *) Add support for blake2b and blake2s
      [Bill Cox]
 
@@ -34,9 +53,6 @@
      [Todd Short]
 
   *) Add SSL_CIPHER queries for authentication and key-exchange.
-
-  *) Modify behavior of ALPN to invoke callback after SNI/servername
-     callback, such that updates to the SSL_CTX affect ALPN.
      [Todd Short]
 
   *) Changes to the DEFAULT cipherlist:

@@ -50,7 +50,7 @@
 
 #include <openssl/opensslconf.h>
 #ifndef OPENSSL_NO_AES
-#include <openssl/crypto.h>
+# include <openssl/crypto.h>
 # include <openssl/evp.h>
 # include <openssl/err.h>
 # include <string.h>
@@ -2684,8 +2684,11 @@ static int aes_ocb_cleanup(EVP_CIPHER_CTX *c)
     return 1;
 }
 
-BLOCK_CIPHER_custom(NID_aes, 128, 16, 12, ocb, OCB, CUSTOM_FLAGS)
-    BLOCK_CIPHER_custom(NID_aes, 192, 16, 12, ocb, OCB, CUSTOM_FLAGS)
-    BLOCK_CIPHER_custom(NID_aes, 256, 16, 12, ocb, OCB, CUSTOM_FLAGS)
+BLOCK_CIPHER_custom(NID_aes, 128, 16, 12, ocb, OCB,
+                    EVP_CIPH_FLAG_AEAD_CIPHER | CUSTOM_FLAGS)
+BLOCK_CIPHER_custom(NID_aes, 192, 16, 12, ocb, OCB,
+                    EVP_CIPH_FLAG_AEAD_CIPHER | CUSTOM_FLAGS)
+BLOCK_CIPHER_custom(NID_aes, 256, 16, 12, ocb, OCB,
+                    EVP_CIPH_FLAG_AEAD_CIPHER | CUSTOM_FLAGS)
 # endif                         /* OPENSSL_NO_OCB */
 #endif

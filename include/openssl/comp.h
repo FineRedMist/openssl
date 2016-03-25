@@ -56,11 +56,14 @@
 #ifndef HEADER_COMP_H
 # define HEADER_COMP_H
 
-# include <openssl/crypto.h>
+# include <openssl/opensslconf.h>
 
-#ifdef  __cplusplus
+# ifndef OPENSSL_NO_COMP
+# include <openssl/crypto.h>
+# ifdef  __cplusplus
 extern "C" {
-#endif
+# endif
+
 
 
 COMP_CTX *COMP_CTX_new(COMP_METHOD *meth);
@@ -80,7 +83,7 @@ void COMP_zlib_cleanup(void);
 
 # ifdef HEADER_BIO_H
 #  ifdef ZLIB
-BIO_METHOD *BIO_f_zlib(void);
+const BIO_METHOD *BIO_f_zlib(void);
 #  endif
 # endif
 
@@ -106,5 +109,7 @@ void ERR_load_COMP_strings(void);
 
 #ifdef  __cplusplus
 }
-#endif
+# endif
+# endif
+
 #endif

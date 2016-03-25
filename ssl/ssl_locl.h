@@ -149,24 +149,16 @@
 # include "e_os.h"
 
 # include <openssl/buffer.h>
-# ifndef OPENSSL_NO_COMP
-#  include <openssl/comp.h>
-# endif
+# include <openssl/comp.h>
 # include <openssl/bio.h>
 # include <openssl/stack.h>
-# ifndef OPENSSL_NO_RSA
-#  include <openssl/rsa.h>
-# endif
-# ifndef OPENSSL_NO_DSA
-#  include <openssl/dsa.h>
-# endif
+# include <openssl/rsa.h>
+# include <openssl/dsa.h>
 # include <openssl/err.h>
 # include <openssl/ssl.h>
 # include <openssl/async.h>
 # include <openssl/symhacks.h>
-# ifndef OPENSSL_NO_CT
-#  include <openssl/ct.h>
-# endif
+# include <openssl/ct.h>
 #include "record/record.h"
 #include "statem/statem.h"
 #include "packet_locl.h"
@@ -425,6 +417,7 @@
  */
 # define TLS1_STREAM_MAC 0x10000
 
+# define SSL_STRONG_MASK         0x0000001FU
 # define SSL_DEFAULT_MASK        0X00000020U
 
 # define SSL_STRONG_NONE         0x00000001U
@@ -1949,6 +1942,7 @@ __owur int ssl_cert_type(X509 *x, EVP_PKEY *pkey);
 void ssl_set_masks(SSL *s);
 __owur STACK_OF(SSL_CIPHER) *ssl_get_ciphers_by_id(SSL *s);
 __owur int ssl_verify_alarm_type(long type);
+void ssl_sort_cipher_list(void);
 void ssl_load_ciphers(void);
 __owur int ssl_fill_hello_random(SSL *s, int server, unsigned char *field, int len);
 __owur int ssl_generate_master_secret(SSL *s, unsigned char *pms, size_t pmslen,

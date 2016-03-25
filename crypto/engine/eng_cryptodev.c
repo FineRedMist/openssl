@@ -56,9 +56,7 @@
 # include <errno.h>
 # include <string.h>
 #endif
-#ifndef OPENSSL_NO_DH
-# include <openssl/dh.h>
-#endif
+#include <openssl/dh.h>
 #include <openssl/dsa.h>
 #include <openssl/err.h>
 #include <openssl/rsa.h>
@@ -117,6 +115,7 @@ static int cryptodev_rsa_nocrt_mod_exp(BIGNUM *r0, const BIGNUM *I, RSA *rsa,
                                        BN_CTX *ctx);
 static int cryptodev_rsa_mod_exp(BIGNUM *r0, const BIGNUM *I, RSA *rsa,
                                  BN_CTX *ctx);
+#ifndef OPENSSL_NO_DSA
 static int cryptodev_dsa_bn_mod_exp(DSA *dsa, BIGNUM *r, BIGNUM *a,
                                     const BIGNUM *p, const BIGNUM *m,
                                     BN_CTX *ctx, BN_MONT_CTX *m_ctx);
@@ -128,6 +127,7 @@ static DSA_SIG *cryptodev_dsa_do_sign(const unsigned char *dgst, int dlen,
                                       DSA *dsa);
 static int cryptodev_dsa_verify(const unsigned char *dgst, int dgst_len,
                                 DSA_SIG *sig, DSA *dsa);
+#endif
 #ifndef OPENSSL_NO_DH
 static int cryptodev_mod_exp_dh(const DH *dh, BIGNUM *r, const BIGNUM *a,
                                 const BIGNUM *p, const BIGNUM *m, BN_CTX *ctx,
@@ -1386,6 +1386,7 @@ static RSA_METHOD cryptodev_rsa = {
     NULL                        /* rsa_verify */
 };
 
+#ifndef OPENSSL_NO_DSA
 static int
 cryptodev_dsa_bn_mod_exp(DSA *dsa, BIGNUM *r, BIGNUM *a, const BIGNUM *p,
                          const BIGNUM *m, BN_CTX *ctx, BN_MONT_CTX *m_ctx)
@@ -1432,14 +1433,12 @@ static DSA_SIG *cryptodev_dsa_do_sign(const unsigned char *dgst, int dlen,
 {
     struct crypt_kop kop;
     BIGNUM *r = NULL, *s = NULL;
-    DSA_SIG *dsaret = NULL;
+    DSA_SIG *dsasig, *dsaret = NULL;
 
-    if ((r = BN_new()) == NULL)
+    dsasig = DSA_SIG_new();
+    if (dsasig == NULL)
         goto err;
-    if ((s = BN_new()) == NULL) {
-        BN_free(r);
-        goto err;
-    }
+    DSA_SIG_get0(&r, &s, dsasig);
 
     memset(&kop, 0, sizeof(kop));
     kop.crk_op = CRK_DSA_SIGN;
@@ -1459,21 +1458,17 @@ static DSA_SIG *cryptodev_dsa_do_sign(const unsigned char *dgst, int dlen,
 
     if (cryptodev_asym(&kop, BN_num_bytes(dsa->q), r,
                        BN_num_bytes(dsa->q), s) == 0) {
-        dsaret = DSA_SIG_new();
-        if (dsaret == NULL)
-            goto err;
-        dsaret->r = r;
-        dsaret->s = s;
+        dsaret = dsasig;
     } else {
         const DSA_METHOD *meth = DSA_OpenSSL();
-        BN_free(r);
-        BN_free(s);
         dsaret = (meth->dsa_do_sign) (dgst, dlen, dsa);
     }
  err:
+    if (dsaret != dsasig)
+        DSA_SIG_free(dsasig);
     kop.crk_param[0].crp_p = NULL;
     zapparams(&kop);
-    return (dsaret);
+    return dsaret;
 }
 
 static int
@@ -1482,6 +1477,7 @@ cryptodev_dsa_verify(const unsigned char *dgst, int dlen,
 {
     struct crypt_kop kop;
     int dsaret = 1;
+    BIGNUM *pr, *ps;
 
     memset(&kop, 0, sizeof(kop));
     kop.crk_op = CRK_DSA_VERIFY;
@@ -1497,9 +1493,10 @@ cryptodev_dsa_verify(const unsigned char *dgst, int dlen,
         goto err;
     if (bn2crparam(dsa->pub_key, &kop.crk_param[4]))
         goto err;
-    if (bn2crparam(sig->r, &kop.crk_param[5]))
+    DSA_SIG_get0(&pr, &ps, sig);
+    if (bn2crparam(pr, &kop.crk_param[5]))
         goto err;
-    if (bn2crparam(sig->s, &kop.crk_param[6]))
+    if (bn2crparam(ps, &kop.crk_param[6]))
         goto err;
     kop.crk_iparams = 7;
 
@@ -1532,6 +1529,7 @@ static DSA_METHOD cryptodev_dsa = {
     0,                          /* flags */
     NULL                        /* app_data */
 };
+#endif
 
 #ifndef OPENSSL_NO_DH
 static int
@@ -1671,6 +1669,7 @@ void engine_load_cryptodev_internal(void)
         }
     }
 
+#ifndef OPENSSL_NO_DSA
     if (ENGINE_set_DSA(engine, &cryptodev_dsa)) {
         const DSA_METHOD *meth = DSA_OpenSSL();
 
@@ -1684,6 +1683,7 @@ void engine_load_cryptodev_internal(void)
         if (cryptodev_asymfeat & CRF_DSA_VERIFY)
             cryptodev_dsa.dsa_do_verify = cryptodev_dsa_verify;
     }
+#endif
 
 #ifndef OPENSSL_NO_DH
     if (ENGINE_set_DH(engine, &cryptodev_dh)) {

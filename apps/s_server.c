@@ -147,10 +147,7 @@
 
 #include <openssl/e_os2.h>
 
-/* conflicts with winsock2 stuff on netware */
-#if !defined(OPENSSL_SYS_NETWARE)
-# include <sys/types.h>
-#endif
+#ifndef OPENSSL_NO_SOCK
 
 /*
  * With IPv6, it looks like Digital has mixed up the proper order of
@@ -424,7 +421,7 @@ static int ebcdic_gets(BIO *bp, char *buf, int size);
 static int ebcdic_puts(BIO *bp, const char *str);
 
 # define BIO_TYPE_EBCDIC_FILTER  (18|0x0200)
-static BIO_METHOD methods_ebcdic = {
+static const BIO_METHOD methods_ebcdic = {
     BIO_TYPE_EBCDIC_FILTER,
     "EBCDIC/ASCII filter",
     ebcdic_write,
@@ -442,7 +439,7 @@ typedef struct {
     char buff[1];
 } EBCDIC_OUTBUFF;
 
-BIO_METHOD *BIO_f_ebcdic_filter()
+const BIO_METHOD *BIO_f_ebcdic_filter()
 {
     return (&methods_ebcdic);
 }
@@ -2112,7 +2109,7 @@ static int sv_body(int s, int stype, unsigned char *context)
     SSL *con = NULL;
     BIO *sbio;
     struct timeval timeout;
-#if defined(OPENSSL_SYS_WINDOWS) || defined(OPENSSL_SYS_MSDOS) || defined(OPENSSL_SYS_NETWARE)
+#if defined(OPENSSL_SYS_WINDOWS) || defined(OPENSSL_SYS_MSDOS)
     struct timeval tv;
 #else
     struct timeval *timeoutp;
@@ -2228,7 +2225,7 @@ static int sv_body(int s, int stype, unsigned char *context)
 
         if (!read_from_sslcon) {
             FD_ZERO(&readfds);
-#if !defined(OPENSSL_SYS_WINDOWS) && !defined(OPENSSL_SYS_MSDOS) && !defined(OPENSSL_SYS_NETWARE)
+#if !defined(OPENSSL_SYS_WINDOWS) && !defined(OPENSSL_SYS_MSDOS)
             openssl_fdset(fileno(stdin), &readfds);
 #endif
             openssl_fdset(s, &readfds);
@@ -2239,7 +2236,7 @@ static int sv_body(int s, int stype, unsigned char *context)
              * if you do have a cast then you can either go for (int *) or
              * (void *).
              */
-#if defined(OPENSSL_SYS_WINDOWS) || defined(OPENSSL_SYS_MSDOS) || defined(OPENSSL_SYS_NETWARE)
+#if defined(OPENSSL_SYS_WINDOWS) || defined(OPENSSL_SYS_MSDOS)
             /*
              * Under DOS (non-djgpp) and Windows we can't select on stdin:
              * only on sockets. As a workaround we timeout the select every
@@ -2793,9 +2790,7 @@ static int www_body(int s, int stype, unsigned char *context)
                     continue;
                 }
 #endif
-#if defined(OPENSSL_SYS_NETWARE)
-                delay(1000);
-#elif !defined(OPENSSL_SYS_MSDOS)
+#if !defined(OPENSSL_SYS_MSDOS)
                 sleep(1);
 #endif
                 continue;
@@ -3186,9 +3181,7 @@ static int rev_body(int s, int stype, unsigned char *context)
                     continue;
                 }
 #endif
-#if defined(OPENSSL_SYS_NETWARE)
-                delay(1000);
-#elif !defined(OPENSSL_SYS_MSDOS)
+#if !defined(OPENSSL_SYS_MSDOS)
                 sleep(1);
 #endif
                 continue;
@@ -3372,3 +3365,5 @@ static void free_sessions(void)
     }
     first = NULL;
 }
+
+#endif

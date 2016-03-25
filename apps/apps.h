@@ -121,16 +121,10 @@
 # include <openssl/lhash.h>
 # include <openssl/conf.h>
 # include <openssl/txt_db.h>
-# ifndef OPENSSL_NO_ENGINE
-#  include <openssl/engine.h>
-# endif
-# ifndef OPENSSL_NO_OCSP
-#  include <openssl/ocsp.h>
-# endif
+# include <openssl/engine.h>
+# include <openssl/ocsp.h>
 # include <openssl/ossl_typ.h>
-# ifndef OPENSSL_SYS_NETWARE
-#  include <signal.h>
-# endif
+# include <signal.h>
 
 # if defined(OPENSSL_SYS_WIN32) || defined(OPENSSL_SYS_WINCE)
 #  define openssl_fdset(a,b) FD_SET((unsigned int)a, b)
@@ -162,6 +156,7 @@ extern BIO *bio_out;
 extern BIO *bio_err;
 BIO *dup_bio_in(int format);
 BIO *dup_bio_out(int format);
+BIO *dup_bio_err(int format);
 BIO *bio_open_owner(const char *filename, int format, int private);
 BIO *bio_open_default(const char *filename, char mode, int format);
 BIO *bio_open_default_quiet(const char *filename, char mode, int format);
